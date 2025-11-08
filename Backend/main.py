@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, Response
+from fastapi.staticfiles import StaticFiles
+
 from app.config import settings
 from app.routers import employees
-from fastapi.responses import Response
-from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="Employees API", version="1.0")
 
@@ -23,20 +24,25 @@ async def favicon():
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     return FileResponse("static/favicon.ico")
+
 
 @app.get("/")
 async def root():
     return {"ok": True, "endpoints": ["/employees?limit=10&offset=0"]}
 
+
 # Mount routers
 app.include_router(employees.router, prefix="/employees", tags=["employees"])
+
 
 if __name__ == "__main__":
     # Allow launching as: python main.py --host 127.0.0.1 --port 8000 --reload
     import argparse
+
     import uvicorn
 
     parser = argparse.ArgumentParser(description="Run FastAPI server")
