@@ -46,19 +46,35 @@ This guide explains how to install, configure, and run the complete Employees De
    SELECT first_name, last_name FROM employees LIMIT 10;
    ```
 
-8. **Run Backend + Frontend**
+8. **Create HTTP Basic secrets**
+
+   The API now requires HTTP Basic authentication. Maintain your whitelist in
+   `Backend/secrets/users.txt` (format: `username:password`, one entry per
+   line). Whenever the list changes, generate the hashed secrets file:
+
+   ```powershell
+   cd Backend
+   python auth/hash_secrets.py
+   ```
+
+   This produces `Backend/secrets/secrets.json`, which the FastAPI app reads at
+   startup. Point the `SECRETS_FILE` environment variable to a different path if
+   needed.
+
+9. **Run Backend + Frontend**
    ```powershell
    python main.py --host 127.0.0.1 --port 8000 --reload
    ```
-   Then open `frontend/index.html` in a browser and click **Load**.
+   Then open `frontend/index.html` in a browser, enter valid credentials, and
+   click **Load**.
 
-9. **List Documentation**
+10. **List Documentation**
 
    Visit:
    ```
    http://127.0.0.1:8000/docs
    ```
-10. **Create .ICO**
+11. **Create .ICO**
    ```
    https://www.favicon.cc/
    ```
