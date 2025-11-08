@@ -11,7 +11,7 @@ The Core Concept: Front-End vs. Back-End
 | **Layer** | **Technology** | **Role** | **Example in This Project** |
 |------------|----------------|-----------|------------------------------|
 | **Front-End** | HTML + JavaScript | User interface that runs in the browser. It sends HTTP requests to the API and renders the results dynamically. | `frontend/index.html` |
-| **Back-End** | FastAPI (Python) + SQLAlchemy | Application server that handles requests, queries the SQL database, and returns structured JSON data. | `backend/main.py` and `app/` modules |
+| **Back-End** | FastAPI (Python) + SQLAlchemy | Application server that handles requests, queries the SQL database, and returns structured JSON data. All endpoints are protected with HTTP Basic authentication backed by bcrypt-hashed secrets. | `backend/main.py`, `app/` modules, `app/auth/` |
 | **Database** | MariaDB / MySQL | Persistent storage containing the `employees` data schema. | `employees` database from [datacharmer/test_db](https://github.com/datacharmer/test_db) |
 
 
@@ -131,6 +131,7 @@ By abstracting DB sessions into dependencies, endpoint handlers remain pure and 
 
 - Declares `/employees` endpoint under its own **APIRouter**.
 - Binds query parameters (`limit`, `offset`) and injects the DB session dependency.
+- Requires successful HTTP Basic authentication via `get_current_user()`.
 - Converts SQLAlchemy row objects into `EmployeeOut` Pydantic models.
 
 **Philosophy:** *Routers = interface boundary of the bounded context.* 
@@ -143,8 +144,18 @@ Each router forms a micro-module representing a cohesive domain service (e.g., e
 - Lightweight package initializer that re-exports router modules.
 - Supports future expansion (`departments.py`, `titles.py`, etc.) without touching the root composition.
 
-**Design principle:** *Open/Closed principle.* 
+**Design principle:** *Open/Closed principle.*
 Adding new domain routers does not require modifying core code, only registration in `main.py`.
+
+---
+
+### `app/auth/` — **HTTP Basic Authentication**
+
+- Loads bcrypt hashed credentials from `secrets/secrets.json`.
+- Exposes `get_current_user()` for routers to validate usernames and passwords using `bcrypt.checkpw`.
+- Includes `auth/hash_secrets.py`, a CLI helper that converts `username:password` pairs from `secrets/users.txt` into the JSON structure consumed by the API.
+
+**Principle:** *Security as configuration.* Credentials are managed outside of application code and can be rotated without redeploying Python modules.
 
 ---
 
@@ -167,6 +178,29 @@ SQLAlchemy Session  ←─── Declarative ORM Models
    ▼
 MariaDB Storage Engine
 ```
+
+---
+
+## 5. Authentication Flow
+
+```
+Admin workstation                          Backend Server
+------------------                         -----------------------------
+secrets/users.txt   --hash_secrets.py-->   secrets/secrets.json (bcrypt)
+                                           │
+                                           ▼
+                                     FastAPI (app/auth/security.py)
+                                           │
+                                           ▼
+                                   HTTP Basic credentials
+                                           │
+                                           ▼
+                                      Protected endpoints
+```
+
+- `hash_secrets.py` converts `username:password` entries into bcrypt hashes.
+- `SECRETS_FILE` (defaults to `Backend/secrets/secrets.json`) tells the API where to load credentials.
+- `Frontend/index.html` prompts for username/password and sends HTTP Basic headers with every request.
 
 Upstream data flow (response path):
 
