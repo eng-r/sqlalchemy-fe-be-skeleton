@@ -8,7 +8,9 @@ from ..schemas import EmployeeOut
 router = APIRouter()
 
 
-@router.get("/", response_model=list[EmployeeOut])
+@router.get("", response_model=list[EmployeeOut])     # /employees
+@router.get("/", response_model=list[EmployeeOut])    # /employees/
+
 async def list_employees(
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),

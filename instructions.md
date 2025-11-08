@@ -7,7 +7,9 @@ This guide explains how to install, configure, and run the complete Employees De
 ## Prerequisites (Windows Platform)
 
 1. **Install Python 3.14** 
+
    [Download Python for Windows](https://www.python.org/downloads/windows/) 
+
    Check “Add Python to PATH” during installation.
 
 2. **Create and activate a virtual environment**
@@ -22,10 +24,12 @@ This guide explains how to install, configure, and run the complete Employees De
    ```
 
 4. **Install MariaDB**
+
    [MariaDB Official Download](https://mariadb.org/download/) 
    Note your root password and port (e.g. 3306) for later use.
 
 5. **Install HeidiSQL (Database GUI)** 
+
    [Download HeidiSQL](https://www.heidisql.com/download.php)
 
 6. **Clone and load the Employees Sample DB**
@@ -36,6 +40,7 @@ This guide explains how to install, configure, and run the complete Employees De
    ```
 
 7. **Verify Data**
+
    Open HeidiSQL, connect to `localhost`, and run:
    ```sql
    SELECT first_name, last_name FROM employees LIMIT 10;
@@ -47,11 +52,41 @@ This guide explains how to install, configure, and run the complete Employees De
    ```
    Then open `frontend/index.html` in a browser and click **Load**.
 
+9. **List Documentation**
+
+   Visit:
+   ```
+   http://127.0.0.1:8000/docs
+   ```
+10. **Create .ICO**
+   ```
+   https://www.favicon.cc/
+   ```
+
+## Extra Tooling - cURL
+
+If your system does not already have cURL, install it manually as follows:
+
+1. **Download the Windows build** 
+
+   Go to the official cURL website: 
+   [https://curl.se/windows/](https://curl.se/windows/)
+
+2. **Extract the ZIP archive** 
+
+   Example: `curl-8.x.x-win64-mingw.zip` 
+   After extraction, you will see a folder containing `curl.exe`.
+
+3. **Create a permanent location for cURL** 
+
+   Move the folder (for example) to: 
+
 ---
 
 ## Backend Architecture
 
 ### Database Configuration
+
 ```powershell
 $env:DB_USER="root"
 $env:DB_PASS="your_password"
@@ -69,17 +104,27 @@ Output should show:
 INFO:     Uvicorn running on http://127.0.0.1:8000
 ```
 
-### Test Endpoint
-Visit:
+### Test Endpoint (Front End Testing)
+   Visit:
 ```
 http://127.0.0.1:8000/employees?limit=10
 ```
-or use `curl`:
+   or use `curl`:
 ```bash
 curl http://127.0.0.1:8000/employees?limit=10
 ```
+   or after the backend server is running, open the following file directly in your browser:
+```
+Frontend\index.html
+```
 
-Expected output (truncated):
+   This HTML file serves as a simple user interface that fetches data from the FastAPI backend running at 
+`http://127.0.0.1:8000/employees?limit=10`. 
+
+Click **Load** in the web page to display the first 10 employee names from the database. 
+No additional web server is required - the file can be opened locally via double-click or drag-and-drop into a browser window.
+
+Expected output for first 2 methods (truncated):
 ```json
 [
   {"emp_no": 10001, "first_name": "Georgi", "last_name": "Facello"},
