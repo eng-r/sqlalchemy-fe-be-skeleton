@@ -1,0 +1,230 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Employee Last Name Editor</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 2rem; max-width: 640px; }
+    h1 { margin-bottom: 1.5rem; }
+    label { font-weight: 600; display: inline-block; min-width: 8rem; }
+    input { padding: .45rem .6rem; border: 1px solid #ccc; border-radius: .35rem; flex: 1; }
+    button { padding: .55rem 1.1rem; border: 1px solid #999; border-radius: .5rem; background: #f2f2f2; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .row { display: flex; gap: .75rem; align-items: center; margin-bottom: .85rem; flex-wrap: wrap; }
+    #status { margin-top: 1rem; font-size: .95rem; min-height: 1.4rem; }
+    #warning { color: #b45309; font-weight: 600; margin-top: .5rem; }
+    #employee-info { margin-top: 1rem; padding: 1rem; border: 1px solid #ddd; border-radius: .5rem; background: #fafafa; }
+    #employee-info dl { display: grid; grid-template-columns: max-content 1fr; column-gap: .75rem; row-gap: .4rem; margin: 0; }
+    #employee-info dt { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>Employee Last Name Editor</h1>
+  <div class="row">
+    <label for="api">API base URL</label>
+    <input id="api" value="http://127.0.0.1:8000" size="30" />
+  </div>
+  <div class="row">
+    <label for="username">Username</label>
+    <input id="username" autocomplete="username" placeholder="manager" />
+  </div>
+  <div class="row">
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" placeholder="••••••" />
+  </div>
+  <div class="row">
+    <button id="start">Start Session</button>
+    <button id="end" disabled>End Session</button>
+  </div>
+  <div id="warning"></div>
+  <hr />
+  <div class="row">
+    <label for="employee-id">Employee ID</label>
+    <input id="employee-id" type="number" min="1" placeholder="10001" />
+    <button id="load" disabled>Load Employee</button>
+  </div>
+  <div class="row">
+    <label for="last-name">Last Name</label>
+    <input id="last-name" placeholder="Updated name" disabled />
+    <button id="save" disabled>Update Last Name</button>
+  </div>
+  <div id="employee-info" hidden>
+    <dl>
+      <dt>Employee #</dt>
+      <dd id="info-id"></dd>
+      <dt>First name</dt>
+      <dd id="info-first"></dd>
+      <dt>Current last name</dt>
+      <dd id="info-last"></dd>
+    </dl>
+  </div>
+  <div id="status"></div>
+
+  <script>
+    let sessionId = null;
+
+    function buildBaseUrl() {
+      return document.getElementById('api').value.replace(/\/$/, '');
+    }
+
+    function buildBasicAuth() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      if (!username || !password) {
+        throw new Error('Enter username and password before starting a session.');
+      }
+      const raw = `${username}:${password}`;
+      return `Basic ${btoa(unescape(encodeURIComponent(raw)))}`;
+    }
+
+    function setStatus(message, isError = false) {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = message;
+      statusEl.style.color = isError ? '#b91c1c' : '#1f2937';
+    }
+
+    function setWarning(message) {
+      const warningEl = document.getElementById('warning');
+      warningEl.textContent = message;
+    }
+
+    function ensureSession() {
+      if (!sessionId) {
+        throw new Error('Start a session first.');
+      }
+    }
+
+    function setSessionControls(active) {
+      document.getElementById('end').disabled = !active;
+      document.getElementById('load').disabled = !active;
+      document.getElementById('save').disabled = !active;
+      document.getElementById('last-name').disabled = !active;
+    }
+
+    async function startSession() {
+      setWarning('');
+      try {
+        const response = await fetch(`${buildBaseUrl()}/sessions/start`, {
+          method: 'POST',
+          headers: {
+            Authorization: buildBasicAuth(),
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`Unable to start session (HTTP ${response.status}).`);
+        }
+        const data = await response.json();
+        sessionId = data.session_id;
+        setStatus(data.message);
+        setSessionControls(true);
+        document.getElementById('end').disabled = false;
+        if (data.replaced) {
+          setWarning('Warning: an existing session for this user was replaced.');
+        }
+      } catch (error) {
+        sessionId = null;
+        setSessionControls(false);
+        setStatus(error.message, true);
+      }
+    }
+
+    async function endSession() {
+      if (!sessionId) {
+        setStatus('No session to end.');
+        return;
+      }
+      try {
+        const response = await fetch(`${buildBaseUrl()}/sessions/end`, {
+          method: 'POST',
+          headers: {
+            Authorization: buildBasicAuth(),
+            'X-Session-Id': sessionId,
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`Unable to end session (HTTP ${response.status}).`);
+        }
+        const data = await response.json();
+        setStatus(`Session closed for ${data.username}.`);
+      } catch (error) {
+        setStatus(error.message, true);
+      } finally {
+        sessionId = null;
+        setSessionControls(false);
+        document.getElementById('employee-info').hidden = true;
+        document.getElementById('last-name').value = '';
+      }
+    }
+
+    async function loadEmployee() {
+      try {
+        ensureSession();
+        const empId = document.getElementById('employee-id').value;
+        if (!empId) {
+          throw new Error('Provide an employee ID.');
+        }
+        setStatus('Loading employee…');
+        const response = await fetch(`${buildBaseUrl()}/employees/${empId}`, {
+          headers: {
+            Authorization: buildBasicAuth(),
+            'X-Session-Id': sessionId,
+          },
+        });
+        if (!response.ok) {
+          const message = response.status === 404 ? 'Employee not found.' : `HTTP ${response.status}.`;
+          throw new Error(`Unable to load employee: ${message}`);
+        }
+        const data = await response.json();
+        document.getElementById('employee-info').hidden = false;
+        document.getElementById('info-id').textContent = data.emp_no;
+        document.getElementById('info-first').textContent = data.first_name;
+        document.getElementById('info-last').textContent = data.last_name;
+        document.getElementById('last-name').value = data.last_name;
+        setStatus('Employee loaded.');
+      } catch (error) {
+        setStatus(error.message, true);
+      }
+    }
+
+    async function updateLastName() {
+      try {
+        ensureSession();
+        const empId = document.getElementById('employee-id').value;
+        const newLastName = document.getElementById('last-name').value.trim();
+        if (!empId) {
+          throw new Error('Provide an employee ID.');
+        }
+        if (!newLastName) {
+          throw new Error('Enter a new last name.');
+        }
+        setStatus('Updating last name…');
+        const response = await fetch(`${buildBaseUrl()}/employees/${empId}/last-name`, {
+          method: 'PUT',
+          headers: {
+            Authorization: buildBasicAuth(),
+            'Content-Type': 'application/json',
+            'X-Session-Id': sessionId,
+          },
+          body: JSON.stringify({ last_name: newLastName }),
+        });
+        if (!response.ok) {
+          const message = response.status === 404 ? 'Employee not found.' : `HTTP ${response.status}.`;
+          throw new Error(`Unable to update last name: ${message}`);
+        }
+        const data = await response.json();
+        document.getElementById('info-last').textContent = data.last_name;
+        document.getElementById('last-name').value = data.last_name;
+        setStatus(`Last name updated for employee ${data.emp_no}.`);
+      } catch (error) {
+        setStatus(error.message, true);
+      }
+    }
+
+    document.getElementById('start').addEventListener('click', startSession);
+    document.getElementById('end').addEventListener('click', endSession);
+    document.getElementById('load').addEventListener('click', loadEmployee);
+    document.getElementById('save').addEventListener('click', updateLastName);
+  </script>
+</body>
+</html>
