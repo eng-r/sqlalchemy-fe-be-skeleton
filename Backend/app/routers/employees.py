@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from ..auth import get_current_user
-from ..deps import get_db
+from ..deps import get_db, require_active_session
 from .. import crud
-from ..schemas import EmployeeOut
+from ..schemas import (
+    EmployeeLastNameUpdate,
+    EmployeeOut,
+)
 
 
 router = APIRouter()
@@ -23,3 +26,34 @@ async def list_employees(
         {"emp_no": r.emp_no, "first_name": r.first_name, "last_name": r.last_name}
         for r in rows
     ]
+
+
+@router.get("/{emp_no}", response_model=EmployeeOut)
+async def get_employee(
+    emp_no: int,
+    db: Session = Depends(get_db),
+    _: str = Depends(require_active_session),
+):
+    employee = crud.get_employee(db, emp_no)
+    if employee is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Employee {emp_no} not found",
+        )
+    return EmployeeOut.model_validate(employee)
+
+
+@router.put("/{emp_no}/last-name", response_model=EmployeeOut)
+async def update_employee_last_name(
+    emp_no: int,
+    payload: EmployeeLastNameUpdate,
+    db: Session = Depends(get_db),
+    _: str = Depends(require_active_session),
+):
+    employee = crud.update_employee_last_name(db, emp_no, payload.last_name)
+    if employee is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Employee {emp_no} not found",
+        )
+    return EmployeeOut.model_validate(employee)

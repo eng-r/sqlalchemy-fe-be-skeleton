@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class EmployeeOut(BaseModel):
@@ -8,3 +8,19 @@ class EmployeeOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class EmployeeLastNameUpdate(BaseModel):
+    last_name: str = Field(..., min_length=1, max_length=16)
+
+
+class SessionStartResponse(BaseModel):
+    username: str
+    session_id: str
+    replaced: bool
+    message: str
+
+
+class SessionEndResponse(BaseModel):
+    username: str
+    ended: bool
