@@ -121,15 +121,23 @@ INFO:     Uvicorn running on http://127.0.0.1:8000
 ```
 
 ### Test Endpoint (Front End Testing)
-   Visit:
+a) Visit:
 ```
 http://127.0.0.1:8000/employees?limit=10
 ```
-   or use `curl`:
-```bash
-curl http://127.0.0.1:8000/employees?limit=10
+NOTE: you will be prompted automatically by the browser for a username and password (a popup window).
+
+You can also embed the credentials directly into the URL (for quick testing, not for production):
 ```
-   or after the backend server is running, open the following file directly in your browser:
+http://admin:supersecret@127.0.0.1:8000/employees?limit=10
+```
+b) or use `curl`:
+```bash
+curl -u admin:supersecret http://127.0.0.1:8000/employees?limit=10
+```
+
+
+c) or after the backend server is running, open the following file directly in your browser (and enter credentials):
 ```
 Frontend\index.html
 ```
