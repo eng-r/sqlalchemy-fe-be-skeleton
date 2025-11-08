@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Employees Demo</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 2rem; }
+    button { padding: .6rem 1rem; border: 1px solid #ccc; border-radius: .5rem; background: #f7f7f7; cursor: pointer; }
+    ul { margin-top: 1rem; padding-left: 1.25rem; }
+    .row { display: flex; gap: .5rem; align-items: center; }
+    .muted { color: #666; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <h1>Employees (first 10)</h1>
+  <div class="row">
+    <label>API base URL:</label>
+    <input id="api" value="http://127.0.0.1:8000" size="30" />
+    <button id="load">Load</button>
+  </div>
+  <p class="muted">Tip: run the backend, then click Load.</p>
+  <ul id="list"></ul>
+
+  <script>
+    async function load() {
+      const base = document.getElementById('api').value.replace(/\/$/, '');
+      const url = `${base}/employees?limit=10`;
+      const ul = document.getElementById('list');
+      ul.innerHTML = '<li>Loading…</li>';
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        ul.innerHTML = '';
+        data.forEach((e) => {
+          const li = document.createElement('li');
+          li.textContent = `${e.emp_no}: ${e.first_name} ${e.last_name}`;
+          ul.appendChild(li);
+        });
+        if (data.length === 0) {
+          ul.innerHTML = '<li>No rows returned.</li>';
+        }
+      } catch (err) {
+        ul.innerHTML = `<li>Error: ${err.message}</li>`;
+      }
+    }
+    document.getElementById('load').addEventListener('click', load);
+  </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.pdb
+*.log
+
+# Virtual environment
+.venv/
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# ---- SQL ----
+*.sql
+*.db
+*.sqlite
+*.sqlite3
+*.bak
+
+# ---- OS / Misc ----
+.DS_Store
+Thumbs.db
+*.tmp
+*.old
+
+# ---- FastAPI / Uvicorn runtime ----
+*.pid
+*.sock
+logs/
