@@ -1,6 +1,23 @@
+# tests/conftest.py
 import json
+import os
+import sys
 from datetime import date
 from pathlib import Path
+from sqlalchemy.pool import StaticPool
+
+"""
+conftest.py is a special file recognized automatically by pytest - the shared configuration and fixture hub.
+pytest auto-discovers it during test collection and uses it to share fixtures, hooks, and configuration across tests.
+
+"""
+
+# --- make local package imports reliable regardless of how pytest is invoked ---
+_THIS_FILE = Path(__file__).resolve()
+_PROJECT_ROOT = _THIS_FILE.parent.parent  # points to Backend/
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+os.environ.setdefault("PYTHONPATH", str(_PROJECT_ROOT))
 
 import bcrypt
 import pytest
@@ -44,15 +61,18 @@ EMPLOYEE_FIXTURES = [
     },
 ]
 
-
 @pytest.fixture
 def sqlite_engine():
-    engine = create_engine("sqlite+pysqlite:///:memory:", future=True)
+    engine = create_engine(
+        "sqlite+pysqlite:///:memory:",
+        future=True,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     Base.metadata.create_all(engine)
     yield engine
     Base.metadata.drop_all(engine)
     engine.dispose()
-
 
 @pytest.fixture
 def session_factory(sqlite_engine):

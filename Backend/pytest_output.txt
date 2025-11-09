@@ -1,0 +1,41 @@
+D:\Python314\Lib\site-packages\pytest_asyncio\plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-8.3.3, pluggy-1.6.0
+rootdir: D:\DatabaseProject\sqlalchemy-fe-be-skeleton\Backend
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.11.0, asyncio-0.24.0, cov-5.0.0
+asyncio: mode=Mode.AUTO, default_loop_scope=None
+collected 21 items
+
+tests\integration\test_employees_api.py .                                [  4%]
+tests\unit\test_auth_security.py ......                                  [ 33%]
+tests\unit\test_crud.py .....                                            [ 57%]
+tests\unit\test_db_access_control.py ....                                [ 76%]
+tests\unit\test_deps.py ...                                              [ 90%]
+tests\unit\test_session_manager.py ..                                    [100%]
+
+---------- coverage: platform win32, python 3.14.0-final-0 -----------
+Name                       Stmts   Miss  Cover   Missing
+--------------------------------------------------------
+app\__init__.py                0      0   100%
+app\auth\__init__.py           2      0   100%
+app\auth\security.py          93     16    83%   76-77, 85, 90, 95-96, 101, 104, 108, 114-115, 128-130, 146-147, 154
+app\config.py                 19      1    95%   20
+app\crud.py                   17      0   100%
+app\db.py                     62     16    74%   51-54, 77-78, 81-82, 93-94, 97-98, 106-107, 110-111
+app\deps.py                   16      4    75%   11-15
+app\models.py                 11      0   100%
+app\routers\__init__.py        2      0   100%
+app\routers\employees.py      24      2    92%   39, 55
+app\routers\sessions.py       20      3    85%   15, 31, 36
+app\schemas.py                 8      0   100%
+app\session_manager.py        30      2    93%   55-56
+--------------------------------------------------------
+TOTAL                        304     44    86%
+
+
+============================= 21 passed in 4.15s ==============================

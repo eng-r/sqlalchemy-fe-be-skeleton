@@ -8,6 +8,8 @@ from sqlalchemy.sql import Executable
 from .auth import get_active_principal
 from .config import settings
 
+from sqlalchemy import Select
+from sqlalchemy.sql.elements import TextClause
 
 DATABASE_URL = (
     f"mysql+pymysql://{settings.DB_USER}:{settings.DB_PASS}"
@@ -37,13 +39,19 @@ class AccessControlledSession(SASession):
             ),
         )
 
-    def _is_select_statement(self, statement: Any) -> bool:
-        if isinstance(statement, str):
-            return statement.lstrip().lower().startswith("select")
-        if isinstance(statement, Executable):
-            # SQLAlchemy Core statements expose ``is_select`` for read queries.
-            return bool(getattr(statement, "is_select", False))
-        return bool(getattr(statement, "is_select", False))
+    @staticmethod
+    def _is_select_statement(statement) -> bool:
+        # SQLAlchemy Core/ORM Select
+        if isinstance(statement, Select):
+            return True
+        # Raw text() queries
+        if isinstance(statement, TextClause):
+            return statement.text.lstrip().upper().startswith("SELECT")
+        # Fallback for anything that exposes .is_select (defensive)
+        is_sel = getattr(statement, "is_select", None)
+        if isinstance(is_sel, bool):
+            return is_sel
+        return False
 
     def execute(self, statement, *args, **kwargs):  # type: ignore[override]
         principal = get_active_principal()
@@ -101,7 +109,6 @@ class AccessControlledSession(SASession):
     def bulk_update_mappings(self, mapper, mappings):  # type: ignore[override]
         self._require_write_access("bulk_update_mappings")
         return super().bulk_update_mappings(mapper, mappings)
-
 
 SessionLocal = sessionmaker(
     bind=engine,

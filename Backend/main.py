@@ -6,7 +6,16 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.routers import employees, sessions
 
+from pathlib import Path
+
 app = FastAPI(title="Employees API", version="1.0")
+
+# Resolve static dir relative to this file, not the working directory
+STATIC_DIR = (Path(__file__).resolve().parent / "static")
+
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+# else: skip mounting in test/CI envs without the folder
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,7 +31,7 @@ async def favicon():
     return Response(status_code=204)  # no content; stops the 404
 """
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/favicon.ico", include_in_schema=False)

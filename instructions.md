@@ -174,12 +174,16 @@ Expected output for first 2 methods (truncated):
 
 # Simplest Frontend (HTML UI)
 
-**Path:** `frontend/index.html` 
+**Path:** `frontend/index.html, index2.html` 
 This minimal HTML file fetches `/employees` via `fetch()` and renders names dynamically.
 
+For `index.html`:
 1. Ensure backend is running on port 8000. 
 2. Open the file in any browser. 
 3. Press **Load** → 10 employee names appear.
+
+for `index2.html`:
+- you can attempt to edit an employee's last name.
 
 ---
 
@@ -191,6 +195,76 @@ This minimal HTML file fetches `/employees` via `fetch()` and renders names dyna
 | `ModuleNotFoundError: app` | Wrong working directory | Run commands inside `backend/`. |
 | `Access denied for user` | Incorrect credentials | Update environment vars. |
 | `CORS error in browser` | Cross-origin restriction | Ensure `CORS_ORIGINS` in `config.py` includes `*`. |
+
+---
+ 
+## Running the Automated Test Suite
+
+The repository ships with both unit tests (powered by `pytest`) and a cURL-based
+integration harness. The instructions below assume you are working from the
+project root (`sqlalchemy-fe-be-skeleton/`).
+
+### 1. Create a virtual environment (recommended)
+
+You can reuse the same environment you prepared for local development, or make
+a fresh one that is dedicated to testing:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+### 2. Install dependencies
+
+From the `Backend/` folder install both the runtime and development
+requirements. (The development file pulls in `pytest`, `httpx`, coverage tools,
+and other testing helpers.)
+
+```bash
+cd Backend
+pip install -r requirements.txt -r requirements-dev.txt
+```
+
+### 3. Run the unit & API tests
+
+With dependencies installed you can execute the entire pytest suite:
+
+```bash
+pytest
+```
+
+By default this uses the in-memory SQLite fixtures defined in
+`Backend/tests/conftest.py`, so no MariaDB instance is required.
+
+### 4. Generate a coverage report (optional)
+
+To collect statement coverage, run the helper BAT file, which already has coverage instructions:
+
+```bash
+run_tests.bat
+```
+
+It will invoke pytest with coverage flags and print a terminal summary; an HTML
+report is written to `Backend/htmlcov/` for interactive inspection.
+
+### 5. Exercise the backend via cURL (integration smoke test)
+
+First, ensure the FastAPI server is running (`python main.py ...`) and that
+`Backend/secrets/secrets.json` contains the expected test credentials. Then, in
+another terminal window, execute:
+
+```bash
+powershell.exe
+```
+Inside PS: 
+```
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\curl_integration.ps1
+```
+
+The script performs a login, read, and write flow using the golden test
+accounts/data defined under `Backend/tests/data/` and compares the responses to
+their expected JSON payloads.
 
 ---
 

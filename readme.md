@@ -157,6 +157,16 @@ Adding new domain routers does not require modifying core code, only registratio
 
 **Principle:** *Security as configuration.* Credentials are managed outside of application code and can be rotated without redeploying Python modules.
 
+### `auth/` — **Utility to regenerate secrets from .TXT file handled by an Admin manually** - see `secrets\`
+
+### `secrets/` — **Manually handled user, password, and access rights list**
+
+### `static/` — **Icon for browser**
+
+### `tests/` — **Unit and Integration Tests**
+
+### `scripts/` — **Utility to run integration tests and obtain coverage**
+
 ---
 
 ## 4. Systemic Relationships
