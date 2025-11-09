@@ -1,0 +1,17 @@
+{
+  "employee": {
+    "emp_no": 10001,
+    "first_name": "Georgi",
+    "last_name": "Facello"
+  },
+  "users": {
+    "admin": {
+      "password": "supersecret",
+      "access": "wr"
+    },
+    "analyst": {
+      "password": "demo123",
+      "access": "rd"
+    }
+  }
+}
