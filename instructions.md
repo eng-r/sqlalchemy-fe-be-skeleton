@@ -121,6 +121,19 @@ INFO:     Uvicorn running on http://127.0.0.1:8000
 ```
 
 ### Test Endpoint (Front End Testing)
+
+List of users with passwords and access rights is in 
+
+```
+Backend\secrets
+```
+
+You can modify it for test purpose, e.g. add more users, and regenerate secrets using
+
+```
+Backend\regenerate_secrets.bat
+```
+
 a) Visit:
 ```
 http://127.0.0.1:8000/employees?limit=10
@@ -136,10 +149,11 @@ b) or use `curl`:
 curl -u admin:supersecret http://127.0.0.1:8000/employees?limit=10
 ```
 
-
 c) or after the backend server is running, open the following file directly in your browser (and enter credentials):
 ```
-Frontend\index.html
+Frontend\index.html (read)
+   or
+Frontend\index2.html (ability to modify IF the user's role matches)
 ```
 
    This HTML file serves as a simple user interface that fetches data from the FastAPI backend running at 
@@ -158,7 +172,7 @@ Expected output for first 2 methods (truncated):
 
 ---
 
-## Simplest Frontend (HTML UI)
+# Simplest Frontend (HTML UI)
 
 **Path:** `frontend/index.html` 
 This minimal HTML file fetches `/employees` via `fetch()` and renders names dynamically.
