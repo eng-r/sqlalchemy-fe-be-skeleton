@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from ..auth import get_current_user
+from ..auth import Principal, get_current_user
 from ..deps import get_db, require_active_session
 from .. import crud
 from ..schemas import (
@@ -32,7 +32,7 @@ async def list_employees(
 async def get_employee(
     emp_no: int,
     db: Session = Depends(get_db),
-    _: str = Depends(require_active_session),
+    _principal: Principal = Depends(require_active_session),
 ):
     employee = crud.get_employee(db, emp_no)
     if employee is None:
@@ -48,7 +48,7 @@ async def update_employee_last_name(
     emp_no: int,
     payload: EmployeeLastNameUpdate,
     db: Session = Depends(get_db),
-    _: str = Depends(require_active_session),
+    _principal: Principal = Depends(require_active_session),
 ):
     employee = crud.update_employee_last_name(db, emp_no, payload.last_name)
     if employee is None:

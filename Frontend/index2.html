@@ -63,6 +63,7 @@
 
   <script>
     let sessionId = null;
+    let accessLevel = null;
 
     function buildBaseUrl() {
       return document.getElementById('api').value.replace(/\/$/, '');
@@ -98,8 +99,9 @@
     function setSessionControls(active) {
       document.getElementById('end').disabled = !active;
       document.getElementById('load').disabled = !active;
-      document.getElementById('save').disabled = !active;
-      document.getElementById('last-name').disabled = !active;
+      const writeEnabled = active && accessLevel === 'wr';
+      document.getElementById('save').disabled = !writeEnabled;
+      document.getElementById('last-name').disabled = !writeEnabled;
     }
 
     async function startSession() {
@@ -116,14 +118,21 @@
         }
         const data = await response.json();
         sessionId = data.session_id;
+        accessLevel = (data.access || '').toLowerCase();
         setStatus(data.message);
         setSessionControls(true);
         document.getElementById('end').disabled = false;
+        const warnings = [];
         if (data.replaced) {
-          setWarning('Warning: an existing session for this user was replaced.');
+          warnings.push('Warning: an existing session for this user was replaced.');
         }
+        if (accessLevel !== 'wr') {
+          warnings.push('Warning: you have read-only access. Updates are disabled.');
+        }
+        setWarning(warnings.join(' '));
       } catch (error) {
         sessionId = null;
+        accessLevel = null;
         setSessionControls(false);
         setStatus(error.message, true);
       }
@@ -151,7 +160,9 @@
         setStatus(error.message, true);
       } finally {
         sessionId = null;
+        accessLevel = null;
         setSessionControls(false);
+        setWarning('');
         document.getElementById('employee-info').hidden = true;
         document.getElementById('last-name').value = '';
       }
@@ -190,6 +201,9 @@
     async function updateLastName() {
       try {
         ensureSession();
+        if (accessLevel !== 'wr') {
+          throw new Error('Write access is required to update employee information.');
+        }
         const empId = document.getElementById('employee-id').value;
         const newLastName = document.getElementById('last-name').value.trim();
         if (!empId) {

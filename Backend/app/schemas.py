@@ -19,6 +19,7 @@ class SessionStartResponse(BaseModel):
     session_id: str
     replaced: bool
     message: str
+    access: str
 
 
 class SessionEndResponse(BaseModel):
