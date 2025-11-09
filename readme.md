@@ -153,7 +153,7 @@ Adding new domain routers does not require modifying core code, only registratio
 
 - Loads bcrypt hashed credentials from `secrets/secrets.json`.
 - Exposes `get_current_user()` for routers to validate usernames and passwords using `bcrypt.checkpw`.
-- Includes `auth/hash_secrets.py`, a CLI helper that converts `username:password` pairs from `secrets/users.txt` into the JSON structure consumed by the API.
+- Includes `auth/hash_secrets.py`, a CLI helper that converts `username:password:access` entries from `secrets/users.txt` into the JSON structure consumed by the API.
 
 **Principle:** *Security as configuration.* Credentials are managed outside of application code and can be rotated without redeploying Python modules.
 
@@ -198,7 +198,7 @@ secrets/users.txt   --hash_secrets.py-->   secrets/secrets.json (bcrypt)
                                       Protected endpoints
 ```
 
-- `hash_secrets.py` converts `username:password` entries into bcrypt hashes.
+- `hash_secrets.py` converts `username:password:access` entries into bcrypt hashes and access metadata.
 - `SECRETS_FILE` (defaults to `Backend/secrets/secrets.json`) tells the API where to load credentials.
 - `Frontend/index.html` prompts for username/password and sends HTTP Basic headers with every request.
 

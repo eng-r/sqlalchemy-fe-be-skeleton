@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict, Tuple
 
 import bcrypt
 
@@ -14,10 +14,13 @@ DEFAULT_OUTPUT = Path("secrets/secrets.json")
 DEFAULT_ROUNDS = 12
 
 
-def parse_users_file(path: Path) -> Dict[str, str]:
-    """Parse ``path`` and return a mapping of username -> password."""
+AccessEntry = Tuple[str, str]
 
-    users: Dict[str, str] = {}
+
+def parse_users_file(path: Path) -> Dict[str, AccessEntry]:
+    """Parse ``path`` and return a mapping of username -> (password, access)."""
+
+    users: Dict[str, AccessEntry] = {}
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except FileNotFoundError as exc:
@@ -27,20 +30,25 @@ def parse_users_file(path: Path) -> Dict[str, str]:
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
-        if ":" not in stripped:
+        parts = [segment.strip() for segment in stripped.split(":", 2)]
+        if len(parts) != 3:
             raise SystemExit(
-                f"Invalid line in {path}: '{line}'. Expected format 'username:password'."
+                f"Invalid line in {path}: '{line}'. Expected format "
+                "'username:password:access'."
             )
-        username, password = stripped.split(":", 1)
-        username = username.strip()
-        password = password.strip()
-        if not username or not password:
+        username, password, access = parts
+        if not username or not password or not access:
             raise SystemExit(
-                f"Invalid line in {path}: '{line}'. Username and password required."
+                f"Invalid line in {path}: '{line}'. Username, password, and access required."
             )
         if username in users:
             raise SystemExit(f"Duplicate username '{username}' in {path}.")
-        users[username] = password
+        lowered_access = access.lower()
+        if lowered_access not in {"rd", "wr"}:
+            raise SystemExit(
+                f"Invalid access level '{access}' for user '{username}'. Use 'rd' or 'wr'."
+            )
+        users[username] = (password, lowered_access)
     return users
 
 
@@ -49,11 +57,14 @@ def hash_password(password: str, rounds: int) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
 
 
-def build_payload(users: Dict[str, str], rounds: int) -> Dict[str, Dict[str, str]]:
+def build_payload(users: Dict[str, AccessEntry], rounds: int) -> Dict[str, Any]:
     return {
         "algorithm": "bcrypt",
         "rounds": rounds,
-        "users": {username: hash_password(password, rounds) for username, password in users.items()},
+        "users": {
+            username: {"hash": hash_password(password, rounds), "access": access}
+            for username, (password, access) in users.items()
+        },
     }
 
 

@@ -49,7 +49,7 @@ This guide explains how to install, configure, and run the complete Employees De
 8. **Create HTTP Basic secrets**
 
    The API now requires HTTP Basic authentication. Maintain your whitelist in
-   `Backend/secrets/users.txt` (format: `username:password`, one entry per
+   `Backend/secrets/users.txt` (format: `username:password:access`, one entry per
    line). Whenever the list changes, generate the hashed secrets file:
 
    ```powershell
